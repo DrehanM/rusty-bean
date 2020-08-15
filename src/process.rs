@@ -8,3 +8,5 @@ pub struct Process<'a> {
     stack_pointer: &'a u8,
     //priority: u32,
 }
+
+fn process_execute(&str command);
