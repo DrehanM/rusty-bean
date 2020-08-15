@@ -7,25 +7,42 @@
 
 use rustybean::println;
 use core::panic::PanicInfo;
+use bootloader::{BootInfo, entry_point};
 
-#[no_mangle] //don't mangle the name of this function
-pub extern "C" fn _start() -> ! {
-    println!("Hello World{}", "!");
+entry_point!(kernel_main);
+
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
+    use rustybean::memory;
+    use x86_64::{structures::paging::Page, VirtAddr};
+    use rustybean::memory::BootInfoFrameAllocator;
+
+    
+    println!("Hello Tina{}", "!");
 
     rustybean::init();
 
-    fn stack_overflow() {
-        stack_overflow(); // for each recursion, the return address is pushed
+    
+    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mut mapper = unsafe { memory::init(phys_mem_offset) };
+    let mut frame_allocator = unsafe {
+        BootInfoFrameAllocator::init(&boot_info.memory_map)
     };
+    // map an unused page
+    let page = Page::containing_address(VirtAddr::new(0));
+    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
 
-    stack_overflow();
+    // write the string `New!` to the screen through the new mapping
+    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
+    // let ptr = 0xdeadbeaf as *mut u32;
+    // unsafe { *ptr = 42; }
 
     #[cfg(test)]
     test_main();
 
     println!("No crash!");
 
-    loop {}
+    rustybean::hlt_loop();
 }
 
 
@@ -34,7 +51,7 @@ pub extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    rustybean::hlt_loop();
 }
 
 #[cfg(test)]
