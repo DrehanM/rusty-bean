@@ -26,3 +26,6 @@ test-args = [
 test-success-exit-code = 33         # (0x10 << 1) | 1
 test-timeout = 30          # (in seconds)
 
+[[test]]
+name = "stack_overflow"
+harness = false
