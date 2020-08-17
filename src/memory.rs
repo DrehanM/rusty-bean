@@ -43,7 +43,7 @@ pub unsafe fn init(physical_memory_offset: VirtAddr) -> OffsetPageTable<'static>
     OffsetPageTable::new(level_4_table, physical_memory_offset)
 }
 
-unsafe fn active_level_4_table(physical_memory_offset: VirtAddr) 
+pub unsafe fn active_level_4_table(physical_memory_offset: VirtAddr) 
     -> &'static mut PageTable 
 {
     use x86_64::registers::control::Cr3;
